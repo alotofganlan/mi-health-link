@@ -1,0 +1,63 @@
+name: Locate prior APK analysis
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  locate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: vps
+    steps:
+      - name: Validate VPS secrets
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+        run: |
+          set -euo pipefail
+          test -n "$VPS_HOST"
+          test -n "$VPS_USER"
+          test -n "$VPS_SSH_KEY"
+
+      - name: Configure SSH
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+        run: |
+          set -euo pipefail
+          PORT="${VPS_PORT:-22}"
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -T 10 -p "$PORT" -H "$VPS_HOST" >> ~/.ssh/known_hosts
+
+      - name: Locate APK and decompiler artifacts
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+        run: |
+          set -euo pipefail
+          PORT="${VPS_PORT:-22}"
+          timeout 120s ssh \
+            -o BatchMode=yes \
+            -o ConnectTimeout=15 \
+            -o ServerAliveInterval=15 \
+            -o ServerAliveCountMax=3 \
+            -p "$PORT" "$VPS_USER@$VPS_HOST" 'bash -s' <<'REMOTE'
+          set -euo pipefail
+          { find "$HOME" /tmp -maxdepth 7 -type f \
+            \( -iname 'base.apk' \
+               -o -iname 'classes10.dex' \
+               -o -iname '*dietrecordsrequestparams*' \
+               -o -iname '*jadx*' \
+               -o -iname '*fitness*.apk' \
+               -o -iname '*health*.apk' \) \
+            -printf '%p\t%s bytes\n' 2>/dev/null || true; } | head -200
+          REMOTE

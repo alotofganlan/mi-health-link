@@ -1,0 +1,11 @@
+[Unit]
+Description=Xiaomi Health recent data synchronization
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/mi-health-link
+EnvironmentFile=%h/mi-health-link/.env
+ExecStart=%h/mi-health-link/.venv/bin/xiaomi-health-auto-sync --recent-window-hours 24 --latest-limit 30
+Nice=10

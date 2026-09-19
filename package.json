@@ -1,0 +1,14 @@
+{
+  "name": "xiaomi-health-sync-web-assets",
+  "private": true,
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build:oauth": "node web/build-oauth.mjs"
+  },
+  "devDependencies": {
+    "@supabase/supabase-js": "2.112.3",
+    "esbuild": "0.28.2"
+  }
+}

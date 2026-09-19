@@ -1,0 +1,189 @@
+name: Analyze official Xiaomi diet APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feat/auto-discovery-v06
+    paths:
+      - .github/workflows/analyze-official-diet-apk.yml
+      - tests/test_analyze_official_diet_apk_workflow.py
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Download and verify official APK
+        env:
+          APK_PATH: ${{ runner.temp }}/mihealth.apk
+          DEX_PATH: ${{ runner.temp }}/classes10.dex
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib
+          import os
+          from pathlib import Path
+          from urllib.error import HTTPError
+          from urllib.parse import urlparse
+          from urllib.request import HTTPRedirectHandler, Request, build_opener, urlopen
+          import zipfile
+
+          ENDPOINT = "https://hlth.io.mi.com/download?appId=mifitness"
+          MAX_APK_BYTES = 400_000_000
+          CHUNK_BYTES = 1024 * 1024
+
+          class NoRedirect(HTTPRedirectHandler):
+              def redirect_request(self, req, fp, code, msg, headers, newurl):
+                  return None
+
+          request = Request(ENDPOINT, method="GET", headers={"User-Agent": "Mozilla/5.0"})
+          try:
+              response = build_opener(NoRedirect).open(request, timeout=30)
+          except HTTPError as exc:
+              response = exc
+
+          try:
+              if response.status not in {301, 302, 303, 307, 308}:
+                  raise RuntimeError(f"expected official redirect, got HTTP {response.status}")
+              location = response.headers.get("Location")
+          finally:
+              response.close()
+
+          if not location:
+              raise RuntimeError("official endpoint did not return a download location")
+          parsed = urlparse(location)
+          hostname = parsed.hostname or ""
+          if parsed.scheme != "https" or not hostname.endswith(".fds.api.mi-img.com"):
+              raise RuntimeError(f"refusing unexpected download host: {hostname}")
+
+          apk_path = Path(os.environ["APK_PATH"])
+          digest = hashlib.sha256()
+          total = 0
+          download = Request(location, headers={"User-Agent": "Mozilla/5.0"})
+          with urlopen(download, timeout=60) as source, apk_path.open("wb") as target:
+              print(f"download_status={source.status}")
+              print(f"download_content_type={source.headers.get('Content-Type')}")
+              print(f"download_reported_bytes={source.headers.get('Content-Length')}")
+              print(f"download_final_host={urlparse(source.geturl()).hostname}")
+              content_length = source.headers.get("Content-Length")
+              if content_length and int(content_length) > MAX_APK_BYTES:
+                  raise RuntimeError(f"APK exceeds byte limit: {content_length}")
+              while True:
+                  chunk = source.read(CHUNK_BYTES)
+                  if not chunk:
+                      break
+                  total += len(chunk)
+                  if total > MAX_APK_BYTES:
+                      raise RuntimeError("APK exceeded byte limit while downloading")
+                  digest.update(chunk)
+                  target.write(chunk)
+
+          first_bytes = apk_path.read_bytes()[:64]
+          print(f"download_first_bytes_hex={first_bytes.hex()}")
+          if first_bytes[:4] != b"PK\x03\x04":
+              raise RuntimeError("download is not an APK/ZIP file")
+
+          dex_path = Path(os.environ["DEX_PATH"])
+          with zipfile.ZipFile(apk_path) as archive:
+              members = archive.namelist()
+              if "classes10.dex" not in members:
+                  raise RuntimeError("official APK does not contain classes10.dex")
+              with archive.open("classes10.dex") as source, dex_path.open("wb") as target:
+                  dex_digest = hashlib.sha256()
+                  while True:
+                      chunk = source.read(CHUNK_BYTES)
+                      if not chunk:
+                          break
+                      dex_digest.update(chunk)
+                      target.write(chunk)
+
+          print(f"apk_host={hostname}")
+          print(f"apk_bytes={total}")
+          print(f"apk_sha256={digest.hexdigest()}")
+          print(f"apk_member_count={len(members)}")
+          print(f"classes10_bytes={dex_path.stat().st_size}")
+          print(f"classes10_sha256={dex_digest.hexdigest()}")
+          PY
+
+      - name: Inspect diet request model and call sites
+        env:
+          APK_PATH: ${{ runner.temp }}/mihealth.apk
+          DEX_PATH: ${{ runner.temp }}/classes10.dex
+          STRINGS_PATH: ${{ runner.temp }}/classes10.strings.txt
+          DEXDUMP_PATH: ${{ runner.temp }}/classes10.dexdump.txt
+        run: |
+          set -euo pipefail
+          DEXDUMP_BIN="$(find "${ANDROID_HOME}/build-tools" -type f -name dexdump | sort -V | tail -1)"
+          APK_ANALYZER="$(find "${ANDROID_HOME}" -type f -name apkanalyzer | head -1)"
+          test -n "${DEXDUMP_BIN}"
+          test -n "${APK_ANALYZER}"
+          echo "dexdump_version=$("${DEXDUMP_BIN}" --help 2>&1 | head -1 || true)"
+          "${APK_ANALYZER}" apk summary "${APK_PATH}" || true
+          "${APK_ANALYZER}" dex list "${APK_PATH}" || true
+          "${APK_ANALYZER}" dex packages --defined-only "${APK_PATH}" |
+            grep -Ei 'diet|food|nutrition' | head -200 || true
+
+          strings -a -n 4 "${DEX_PATH}" > "${STRINGS_PATH}"
+          grep -n -i -C 30 -E             'get_diet_records_by_time|DietRecordsRequestParams|DietReport|DailyDiet|DietSummary|DIET_TYPE_'             "${STRINGS_PATH}" | head -1200 || true
+
+          "${DEXDUMP_BIN}" -d "${DEX_PATH}" > "${DEXDUMP_PATH}"
+          python - <<'PY'
+          import os
+          from pathlib import Path
+
+          path = Path(os.environ["DEXDUMP_PATH"])
+          target_descriptor = (
+              "Lcom/xiaomi/fitness/health/heat/data/DietRecordsRequestParams;"
+          )
+          endpoint_targets = ("data/get_diet_records_by_time",)
+          SECTION_MARKER = "Class #"
+          MAX_SECTION_LINES = 2500
+          MAX_SECTIONS = 20
+          emitted_sections = 0
+
+          def emit_if_targeted(section):
+              global emitted_sections
+              if not section or emitted_sections >= MAX_SECTIONS:
+                  return
+              joined = "".join(section)
+              reasons = []
+              if f"Class descriptor  : '{target_descriptor}'" in joined:
+                  reasons.append("request_model")
+              if any(endpoint in joined for endpoint in endpoint_targets):
+                  reasons.append("readonly_endpoint")
+              if (
+                  target_descriptor in joined
+                  and "new-instance" in joined
+                  and "invoke-direct" in joined
+              ):
+                  reasons.append("request_constructor_callsite")
+              if not reasons:
+                  return
+              emitted_sections += 1
+              print(
+                  "===== targeted class section "
+                  f"{emitted_sections} reasons={','.join(reasons)} ====="
+              )
+              for line in section[:MAX_SECTION_LINES]:
+                  print(line, end="")
+              if len(section) > MAX_SECTION_LINES:
+                  print(
+                      "targeted_section_truncated=true "
+                      f"original_lines={len(section)}"
+                  )
+
+          current = []
+          with path.open(encoding="utf-8", errors="replace") as stream:
+              for line in stream:
+                  if line.startswith(SECTION_MARKER) and current:
+                      emit_if_targeted(current)
+                      current = []
+                  current.append(line)
+              emit_if_targeted(current)
+
+          print(f"targeted_sections_emitted={emitted_sections}")
+          PY

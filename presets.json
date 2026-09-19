@@ -1,0 +1,91 @@
+{
+  "latest": {
+    "path": "/app/v1/data/get_latest_fitness_data",
+    "items": [
+      {
+        "record_type": "heart_rate",
+        "payload": {
+          "key": "heart_rate",
+          "limit": 30
+        }
+      },
+      {
+        "record_type": "resting_heart_rate",
+        "payload": {
+          "key": "resting_heart_rate",
+          "limit": 30
+        }
+      },
+      {
+        "record_type": "sleep",
+        "payload": {
+          "key": "sleep",
+          "limit": 30
+        }
+      },
+      {
+        "record_type": "steps",
+        "payload": {
+          "key": "steps",
+          "limit": 30
+        }
+      },
+      {
+        "record_type": "calories",
+        "payload": {
+          "key": "calories",
+          "limit": 30
+        }
+      },
+      {
+        "record_type": "spo2",
+        "payload": {
+          "key": "spo2",
+          "limit": 30
+        }
+      },
+      {
+        "record_type": "weight",
+        "payload": {
+          "key": "weight",
+          "limit": 30
+        }
+      },
+      {
+        "record_type": "blood_pressure",
+        "payload": {
+          "key": "blood_pressure",
+          "limit": 30
+        }
+      },
+      {
+        "record_type": "temperature_characteristic",
+        "payload": {
+          "key": "temperature_characteristic",
+          "limit": 30
+        }
+      },
+      {
+        "record_type": "single_temperature",
+        "payload": {
+          "key": "single_temperature",
+          "limit": 30
+        }
+      },
+      {
+        "record_type": "vo2_max",
+        "payload": {
+          "key": "vo2_max",
+          "limit": 30
+        }
+      },
+      {
+        "record_type": "stress",
+        "payload": {
+          "key": "stress",
+          "limit": 30
+        }
+      }
+    ]
+  }
+}

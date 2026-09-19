@@ -1,0 +1,15 @@
+[Unit]
+Description=Xiaomi Health MCP Server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/mi-health-link
+EnvironmentFile=%h/mi-health-link/.env
+ExecStart=%h/mi-health-link/.venv/bin/xiaomi-health-mcp
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

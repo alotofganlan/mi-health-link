@@ -1,0 +1,12 @@
+[Unit]
+Description=Nightscout glucose synchronization to Supabase and Xiaomi Cloud
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/mi-health-link
+EnvironmentFile=-%h/mi-health-link/.env
+EnvironmentFile=-%h/.config/xiaomi-health-sync/nightscout.env
+ExecStart=/bin/bash %h/mi-health-link/deploy/xiaomi-health-nightscout-sync-runner.sh
+Nice=10

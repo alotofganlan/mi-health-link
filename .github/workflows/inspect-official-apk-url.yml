@@ -1,0 +1,153 @@
+name: Inspect official Xiaomi APK URL
+
+on:
+  push:
+    branches:
+      - feat/auto-discovery-v06
+    paths:
+      - .github/workflows/inspect-official-apk-url.yml
+      - tests/test_inspect_official_apk_url_workflow.py
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Read official download page resources
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from html.parser import HTMLParser
+          import re
+          import time
+          from urllib.parse import urljoin, urlparse
+          from urllib.error import HTTPError
+          from urllib.request import HTTPRedirectHandler, Request, build_opener, urlopen
+
+          BASE = "https://watch.iot.mi.com/download-apps-v3.html?redir=k65&region=cn"
+          ALLOWED_HOSTS = {
+              "watch.iot.mi.com",
+              "g.watch.iot.mi.com",
+              "cdn.web-global.fds.api.mi-img.com",
+              "hlth.io.mi.com",
+              "region.hlth.io.mi.com",
+          }
+          MAX_BYTES = 20_000_000
+
+          def read_url(url: str) -> str:
+              parsed = urlparse(url)
+              if parsed.scheme != "https" or parsed.hostname not in ALLOWED_HOSTS:
+                  raise ValueError(f"refusing non-official resource: {url}")
+              request = Request(url, headers={"User-Agent": "Mozilla/5.0"})
+              last_error = None
+              for attempt in range(2):
+                  try:
+                      with urlopen(request, timeout=20) as response:
+                          data = response.read(MAX_BYTES + 1)
+                      break
+                  except Exception as exc:
+                      last_error = exc
+                      if attempt == 0:
+                          time.sleep(1)
+              else:
+                  raise last_error
+              if len(data) > MAX_BYTES:
+                  raise ValueError(f"official resource too large: {url}")
+              return data.decode("utf-8", errors="replace")
+
+          class Scripts(HTMLParser):
+              def __init__(self):
+                  super().__init__()
+                  self.sources = []
+
+              def handle_starttag(self, tag, attrs):
+                  if tag != "script":
+                      return
+                  source = dict(attrs).get("src")
+                  if source:
+                      self.sources.append(source)
+
+          page = read_url(BASE)
+          parser = Scripts()
+          parser.feed(page)
+          print(f"official_script_count={len(parser.sources)}")
+
+          patterns = (
+              r"https?:\\?/\\?/[^\"' ]{1,500}",
+              r"[^\"' ]{0,180}redir[^\"' ]{0,300}",
+              r"[^\"' ]{0,180}k65[^\"' ]{0,300}",
+              r"[^\"' ]{0,180}download[^\"' ]{0,300}",
+              r"[^\"' ]{0,180}android[^\"' ]{0,300}",
+          )
+          emitted = 0
+          for source in parser.sources:
+              url = urljoin(BASE, source)
+              if urlparse(url).hostname not in ALLOWED_HOSTS:
+                  print(f"skipping_non_download_resource={urlparse(url).hostname}")
+                  continue
+              print(f"official_resource={url}")
+              try:
+                  script = read_url(url)
+              except Exception as exc:
+                  print(f"resource_read_failed={type(exc).__name__}:{url}")
+                  continue
+              for needle in ("/download?appId=mifitness", "/abroad_download?appId=mifitness"):
+                  offset = 0
+                  while True:
+                      index = script.find(needle, offset)
+                      if index < 0:
+                          break
+                      context = script[max(0, index - 6000):min(len(script), index + 500)]
+                      print(f"download_call_context={context}")
+                      offset = index + len(needle)
+              seen = set()
+              for pattern in patterns:
+                  for match in re.findall(pattern, script, flags=re.IGNORECASE):
+                      cleaned = match[:700]
+                      if cleaned in seen:
+                          continue
+                      print(cleaned)
+                      seen.add(cleaned)
+                      emitted += 1
+                      if emitted >= 200:
+                          break
+                  if emitted >= 200:
+                      break
+              if emitted >= 200:
+                  break
+          print(f"emitted_matches={emitted}")
+
+          class NoRedirect(HTTPRedirectHandler):
+              def redirect_request(self, req, fp, code, msg, headers, newurl):
+                  return None
+
+          opener = build_opener(NoRedirect)
+          for endpoint in (
+              "https://hlth.io.mi.com/download?appId=mifitness",
+              "https://region.hlth.io.mi.com/abroad_download?appId=mifitness",
+          ):
+              request = Request(endpoint, method="GET", headers={"User-Agent": "Mozilla/5.0"})
+              try:
+                  response = opener.open(request, timeout=20)
+              except HTTPError as exc:
+                  response = exc
+              except Exception as exc:
+                  print(
+                      "download_endpoint="
+                      f"{endpoint} error={type(exc).__name__}:{exc}"
+                  )
+                  continue
+              try:
+                  print(
+                      "download_endpoint="
+                      f"{endpoint} status={response.status} "
+                      f"location={response.headers.get('Location')} "
+                      f"content_type={response.headers.get('Content-Type')} "
+                      f"content_length={response.headers.get('Content-Length')}"
+                  )
+              finally:
+                  response.close()
+          PY

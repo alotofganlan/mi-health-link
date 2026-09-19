@@ -1,0 +1,139 @@
+{
+  "latest": {
+    "path": "/app/v1/data/get_latest_fitness_data",
+    "items": [
+      {
+        "record_type": "heart_rate",
+        "payload": {
+          "params": [
+            {
+              "key": "heart_rate",
+              "limit": 30
+            }
+          ]
+        }
+      },
+      {
+        "record_type": "resting_heart_rate",
+        "payload": {
+          "params": [
+            {
+              "key": "resting_heart_rate",
+              "limit": 30
+            }
+          ]
+        }
+      },
+      {
+        "record_type": "sleep",
+        "payload": {
+          "params": [
+            {
+              "key": "sleep",
+              "limit": 30
+            }
+          ]
+        }
+      },
+      {
+        "record_type": "steps",
+        "payload": {
+          "params": [
+            {
+              "key": "steps",
+              "limit": 30
+            }
+          ]
+        }
+      },
+      {
+        "record_type": "calories",
+        "payload": {
+          "params": [
+            {
+              "key": "calories",
+              "limit": 30
+            }
+          ]
+        }
+      },
+      {
+        "record_type": "spo2",
+        "payload": {
+          "params": [
+            {
+              "key": "spo2",
+              "limit": 30
+            }
+          ]
+        }
+      },
+      {
+        "record_type": "weight",
+        "payload": {
+          "params": [
+            {
+              "key": "weight",
+              "limit": 30
+            }
+          ]
+        }
+      },
+      {
+        "record_type": "blood_pressure",
+        "payload": {
+          "params": [
+            {
+              "key": "blood_pressure",
+              "limit": 30
+            }
+          ]
+        }
+      },
+      {
+        "record_type": "temperature_characteristic",
+        "payload": {
+          "params": [
+            {
+              "key": "temperature_characteristic",
+              "limit": 30
+            }
+          ]
+        }
+      },
+      {
+        "record_type": "single_temperature",
+        "payload": {
+          "params": [
+            {
+              "key": "single_temperature",
+              "limit": 30
+            }
+          ]
+        }
+      },
+      {
+        "record_type": "vo2_max",
+        "payload": {
+          "params": [
+            {
+              "key": "vo2_max",
+              "limit": 30
+            }
+          ]
+        }
+      },
+      {
+        "record_type": "stress",
+        "payload": {
+          "params": [
+            {
+              "key": "stress",
+              "limit": 30
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

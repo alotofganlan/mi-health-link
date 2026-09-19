@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Xiaomi Health 授权</title>
+  <style>
+    :root { color-scheme: light dark; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: Canvas; color: CanvasText; }
+    main { width: min(92vw, 520px); border: 1px solid color-mix(in srgb, CanvasText 15%, transparent); border-radius: 18px; padding: 24px; box-sizing: border-box; }
+    h1 { margin: 0 0 8px; font-size: 1.4rem; }
+    p { line-height: 1.55; }
+    .muted { opacity: .7; font-size: .92rem; }
+    .hidden { display: none; }
+    label { display: block; margin: 14px 0 6px; }
+    input { width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 10px; border: 1px solid color-mix(in srgb, CanvasText 20%, transparent); background: Canvas; color: CanvasText; }
+    .actions { display: flex; gap: 10px; margin-top: 20px; }
+    button { flex: 1; min-height: 42px; border-radius: 10px; border: 1px solid color-mix(in srgb, CanvasText 20%, transparent); cursor: pointer; }
+    button.primary { background: CanvasText; color: Canvas; }
+    ul { padding-left: 20px; }
+    #error { color: #b42318; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Xiaomi Health 授权</h1>
+  <p class="muted">仅授权当前 OAuth 客户端访问你的 Xiaomi Health MCP。健康数据不会显示在这个授权页面。</p>
+
+  <section id="loading"><p>正在读取授权请求…</p></section>
+
+  <section id="login" class="hidden">
+    <p>请先登录用于 Xiaomi Health 的 Supabase 账户。</p>
+    <label for="email">邮箱</label>
+    <input id="email" type="email" autocomplete="username">
+    <label for="password">密码</label>
+    <input id="password" type="password" autocomplete="current-password">
+    <div class="actions"><button id="loginButton" class="primary" type="button">登录</button></div>
+  </section>
+
+  <section id="consent" class="hidden">
+    <p><strong id="clientName"></strong> 请求访问你的账户。</p>
+    <p class="muted">回调地址：<span id="redirectUri"></span></p>
+    <div id="scopeBlock" class="hidden">
+      <p>请求权限：</p>
+      <ul id="scopes"></ul>
+    </div>
+    <div class="actions">
+      <button id="denyButton" type="button">拒绝</button>
+      <button id="approveButton" class="primary" type="button">允许</button>
+    </div>
+  </section>
+
+  <p id="error" class="hidden"></p>
+</main>
+
+<script id="oauth-config" type="application/json">__OAUTH_CONFIG__</script>
+<script type="module" src="/oauth/consent.js"></script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+services:
+  mi-health-link:
+    build: .
+    env_file: .env
+    volumes:
+      - ./xiaomi-credentials.json:/app/xiaomi-credentials.json:ro
+      - ./presets.json:/app/presets.json:ro
+    command: ["probe-presets", "--file", "/app/presets.json"]

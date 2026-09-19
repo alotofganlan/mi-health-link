@@ -1,0 +1,21 @@
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Repository documentation placeholders and exact test-only values"
+regexTarget = "match"
+regexes = [
+  '''ZnJlc2gtc3NlY3VyaXR5''',
+  '''0123456789abcdef0123456789abcdef01234567''',
+  '''eyJhbGciOiJIUzI1NiJ9[.]legacy''',
+]
+
+[[allowlists]]
+description = "Documented Supabase secret placeholder"
+paths = [
+  '''DEPLOYMENT[.]md''',
+]
+regexTarget = "line"
+regexes = [
+  '''SUPABASE_SERVICE_ROLE_KEY=<SERVER_SECRET_KEY>''',
+]

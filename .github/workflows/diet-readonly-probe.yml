@@ -1,0 +1,173 @@
+name: Read-only Xiaomi diet probe
+
+on:
+  push:
+    branches:
+      - feat/auto-discovery-v06
+    paths:
+      - .github/workflows/diet-readonly-probe.yml
+      - tests/test_diet_probe_workflow.py
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    environment: vps
+    steps:
+      - name: Validate VPS secrets
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+        run: |
+          set -euo pipefail
+          test -n "$VPS_HOST"
+          test -n "$VPS_USER"
+          test -n "$VPS_SSH_KEY"
+
+      - name: Configure SSH
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+        run: |
+          set -euo pipefail
+          PORT="${VPS_PORT:-22}"
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -T 10 -p "$PORT" -H "$VPS_HOST" >> ~/.ssh/known_hosts
+
+      - name: Probe fixed read-only diet endpoint
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+        run: |
+          set -euo pipefail
+          PORT="${VPS_PORT:-22}"
+          timeout 180s ssh \
+            -o BatchMode=yes \
+            -o ConnectTimeout=15 \
+            -o ServerAliveInterval=15 \
+            -o ServerAliveCountMax=3 \
+            -p "$PORT" "$VPS_USER@$VPS_HOST" \
+            "EXPECTED_SHA='$GITHUB_SHA' bash -s" <<'REMOTE'
+          set -euo pipefail
+          cd "$HOME/mi-health-link"
+          for _ in $(seq 1 48); do
+            CURRENT_SHA="$(git rev-parse HEAD)"
+            if [ "$CURRENT_SHA" = "$EXPECTED_SHA" ]; then
+              break
+            fi
+            sleep 5
+          done
+          test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+
+          .venv/bin/python - <<'PY'
+          import json
+          from datetime import datetime, timedelta
+          from zoneinfo import ZoneInfo
+
+          from xiaomi_health_sync.config import load_credentials, load_settings
+          from xiaomi_health_sync.xiaomi import XiaomiHealthClient
+
+          settings = load_settings()
+          credentials = load_credentials(settings.credentials_file, settings.region)
+          zone = ZoneInfo("Asia/Shanghai")
+          now = datetime.now(zone)
+          today = now.replace(hour=0, minute=0, second=0, microsecond=0)
+          yesterday = today - timedelta(days=1)
+          history_start = today - timedelta(days=365)
+          windows = [
+              (
+                  "epoch-ms",
+                  int(today.timestamp() * 1000),
+                  int(now.timestamp() * 1000),
+              ),
+              (
+                  "epoch-seconds",
+                  int(today.timestamp()),
+                  int(now.timestamp()),
+              ),
+              (
+                  "yesterday-ms",
+                  int(yesterday.timestamp() * 1000),
+                  int(today.timestamp() * 1000) - 1,
+              ),
+              (
+                  "recent-7d-ms",
+                  int((today - timedelta(days=7)).timestamp() * 1000),
+                  int(now.timestamp() * 1000),
+              ),
+              (
+                  "full-range-ms",
+                  int(history_start.timestamp() * 1000),
+                  int(now.timestamp() * 1000),
+              ),
+          ]
+
+          summaries = []
+          with XiaomiHealthClient(settings, credentials) as client:
+              for window_label, start_time, end_time in windows:
+                  for dining in range(7):
+                      label = f"{window_label}/dining-{dining}"
+                      payload = {
+                          "dining": dining,
+                          "limit": 100,
+                          "start_time": start_time,
+                          "end_time": end_time,
+                          "reverse": False,
+                          "next_key": "",
+                      }
+                      response = client.get_diet_records_by_time(**payload)
+                      decoded = (
+                          response.json_data
+                          if isinstance(response.json_data, dict)
+                          else None
+                      )
+                      result = (
+                          decoded.get("result")
+                          if isinstance(decoded, dict)
+                          and isinstance(decoded.get("result"), dict)
+                          else {}
+                      )
+                      records = result.get("diet_records")
+                      record_count = len(records) if isinstance(records, list) else None
+                      summary = {
+                          "candidate": label,
+                          "http_status": response.status_code,
+                          "code": decoded.get("code") if isinstance(decoded, dict) else None,
+                          "diet_records_type": (
+                              type(records).__name__ if records is not None else "null"
+                          ),
+                          "diet_records_count": record_count,
+                          "has_more": result.get("has_more"),
+                      }
+                      summaries.append(summary)
+                      if records:
+                          print(
+                              "DIET_RECORD_PAYLOAD="
+                              + json.dumps(
+                                  {
+                                      "candidate": label,
+                                      "payload": payload,
+                                      "response": decoded,
+                                  },
+                                  ensure_ascii=False,
+                              ),
+                              flush=True,
+                          )
+                      if response.status_code == 401:
+                          break
+          print(
+              "DIET_PROBE_SUMMARY="
+              + json.dumps(summaries, ensure_ascii=False),
+              flush=True,
+          )
+          PY
+          REMOTE

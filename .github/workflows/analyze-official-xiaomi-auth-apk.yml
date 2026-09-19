@@ -1,0 +1,202 @@
+name: Analyze official Xiaomi auth APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feat/auto-discovery-v06
+    paths:
+      - .github/workflows/analyze-official-xiaomi-auth-apk.yml
+      - tests/test_analyze_official_xiaomi_auth_apk_workflow.py
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Download and extract official DEX files
+        env:
+          APK_PATH: ${{ runner.temp }}/mihealth.apk
+          DEX_DIR: ${{ runner.temp }}/mihealth-dex
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib
+          import os
+          from pathlib import Path
+          from urllib.error import HTTPError
+          from urllib.parse import urlparse
+          from urllib.request import HTTPRedirectHandler, Request, build_opener, urlopen
+          import zipfile
+
+          ENDPOINT = "https://hlth.io.mi.com/download?appId=mifitness"
+          MAX_APK_BYTES = 400_000_000
+          CHUNK_BYTES = 1024 * 1024
+
+          class NoRedirect(HTTPRedirectHandler):
+              def redirect_request(self, req, fp, code, msg, headers, newurl):
+                  return None
+
+          request = Request(ENDPOINT, method="GET", headers={"User-Agent": "Mozilla/5.0"})
+          try:
+              response = build_opener(NoRedirect).open(request, timeout=30)
+          except HTTPError as exc:
+              response = exc
+          try:
+              if response.status not in {301, 302, 303, 307, 308}:
+                  raise RuntimeError(f"expected official redirect, got HTTP {response.status}")
+              location = response.headers.get("Location")
+          finally:
+              response.close()
+
+          if not location:
+              raise RuntimeError("official endpoint did not return a download location")
+          parsed = urlparse(location)
+          hostname = parsed.hostname or ""
+          if parsed.scheme != "https" or not hostname.endswith(".fds.api.mi-img.com"):
+              raise RuntimeError(f"refusing unexpected download host: {hostname}")
+
+          apk_path = Path(os.environ["APK_PATH"])
+          digest = hashlib.sha256()
+          total = 0
+          with urlopen(Request(location, headers={"User-Agent": "Mozilla/5.0"}), timeout=60) as source, apk_path.open("wb") as target:
+              content_length = source.headers.get("Content-Length")
+              if content_length and int(content_length) > MAX_APK_BYTES:
+                  raise RuntimeError(f"APK exceeds byte limit: {content_length}")
+              while True:
+                  chunk = source.read(CHUNK_BYTES)
+                  if not chunk:
+                      break
+                  total += len(chunk)
+                  if total > MAX_APK_BYTES:
+                      raise RuntimeError("APK exceeded byte limit while downloading")
+                  digest.update(chunk)
+                  target.write(chunk)
+
+          dex_dir = Path(os.environ["DEX_DIR"])
+          dex_dir.mkdir()
+          with zipfile.ZipFile(apk_path) as archive:
+              dex_names = sorted(
+                  name
+                  for name in archive.namelist()
+                  if name.startswith("classes") and name.endswith(".dex")
+              )
+              if not dex_names:
+                  raise RuntimeError("official APK contains no DEX files")
+              for name in dex_names:
+                  target = dex_dir / Path(name).name
+                  with archive.open(name) as source, target.open("wb") as output:
+                      while True:
+                          chunk = source.read(CHUNK_BYTES)
+                          if not chunk:
+                              break
+                          output.write(chunk)
+
+          print(f"apk_host={hostname}")
+          print(f"apk_bytes={total}")
+          print(f"apk_sha256={digest.hexdigest()}")
+          print(f"dex_count={len(dex_names)}")
+          print(f"dex_names={','.join(dex_names)}")
+          PY
+
+      - name: Search static authentication strings
+        env:
+          DEX_DIR: ${{ runner.temp }}/mihealth-dex
+          STRINGS_DIR: ${{ runner.temp }}/mihealth-strings
+        run: |
+          set -euo pipefail
+          mkdir -p "${STRINGS_DIR}"
+          for DEX_PATH in "${DEX_DIR}"/classes*.dex; do
+            DEX_NAME="$(basename "${DEX_PATH}")"
+            STRINGS_PATH="${STRINGS_DIR}/${DEX_NAME}.txt"
+            strings -a -n 4 "${DEX_PATH}" > "${STRINGS_PATH}"
+            echo "===== auth strings in ${DEX_NAME} ====="
+            grep -n -i -C 25 -E \
+              'serviceToken|ssecurity|passToken|refreshToken|refresh_token|serviceLoginAuth2|miothealth|account\.xiaomi\.com|clientSign|_userIdNeedEncrypt|stsUrl|token_exchange|exchangeToken' \
+              "${STRINGS_PATH}" | head -1800 || true
+          done
+
+
+      - name: Locate Xiaomi session refresh call sites
+        env:
+          DEX_DIR: ${{ runner.temp }}/mihealth-dex
+          DUMP_DIR: ${{ runner.temp }}/mihealth-auth-dumps
+        run: |
+          set -euo pipefail
+          mkdir -p "${DUMP_DIR}"
+          DEXDUMP_BIN="$(find "${ANDROID_HOME}/build-tools" -type f -name dexdump | sort -V | tail -1)"
+          test -n "${DEXDUMP_BIN}"
+          for DEX_NAME in classes2.dex classes9.dex classes11.dex classes12.dex; do
+            DEX_PATH="${DEX_DIR}/${DEX_NAME}"
+            test -f "${DEX_PATH}" || continue
+            DEXDUMP_PATH="${DUMP_DIR}/${DEX_NAME}.txt"
+            "${DEXDUMP_BIN}" -d "${DEX_PATH}" > "${DEXDUMP_PATH}"
+            DEX_NAME="${DEX_NAME}" DEXDUMP_PATH="${DEXDUMP_PATH}" python - <<'PY'
+          import os
+          from pathlib import Path
+
+          dex_name = os.environ["DEX_NAME"]
+          path = Path(os.environ["DEXDUMP_PATH"])
+          needles = (
+              "getServiceToken url forceRefresh",
+              "invalidateServiceToken",
+              "refreshServiceToken",
+              "processUnAuthorized.refreshToken",
+              "sFail401WithNoRefreshToken",
+              "miothealth",
+              "ServiceTokenResult",
+              "ServiceTokenUtil",
+              "getAuthToken",
+              "invalidateAuthToken",
+              "passToken",
+          )
+          SECTION_MARKER = "Class #"
+          MAX_TARGET_SECTIONS = 30
+          BEFORE_LINES = 100
+          AFTER_LINES = 220
+          emitted = 0
+
+          def emit_if_targeted(section):
+              global emitted
+              if not section or emitted >= MAX_TARGET_SECTIONS:
+                  return
+              matches = [
+                  index
+                  for index, line in enumerate(section)
+                  if any(needle.lower() in line.lower() for needle in needles)
+              ]
+              if not matches:
+                  return
+              emitted += 1
+              descriptor = next(
+                  (line.strip() for line in section if "Class descriptor" in line),
+                  "Class descriptor unavailable",
+              )
+              print(
+                  f"===== auth callsite {dex_name} section={emitted} "
+                  f"{descriptor} ====="
+              )
+              emitted_ranges = []
+              for index in matches:
+                  start = max(0, index - BEFORE_LINES)
+                  end = min(len(section), index + AFTER_LINES + 1)
+                  if emitted_ranges and start <= emitted_ranges[-1][1]:
+                      continue
+                  emitted_ranges.append((start, end))
+                  for line in section[start:end]:
+                      print(line, end="")
+
+          current = []
+          with path.open(encoding="utf-8", errors="replace") as stream:
+              for line in stream:
+                  if line.startswith(SECTION_MARKER) and current:
+                      emit_if_targeted(current)
+                      current = []
+                  current.append(line)
+              emit_if_targeted(current)
+          print(f"auth_targeted_sections_{dex_name}={emitted}")
+          PY
+          done

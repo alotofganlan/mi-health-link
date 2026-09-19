@@ -1,0 +1,323 @@
+name: Test and deploy VPS
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-vps
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  statuses: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install package and test dependencies
+        run: python -m pip install -e ".[dev]"
+
+      - name: Run tests
+        run: |
+          set +e
+          pytest -q 2>&1 | tee /tmp/pytest.out
+          rc=${PIPESTATUS[0]}
+          echo "$rc" > /tmp/pytest.exit
+          exit "$rc"
+
+      - name: Publish test status
+        if: ${{ always() }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          JOB_STATUS: ${{ job.status }}
+        run: |
+          set -euo pipefail
+          state=success
+          context="xiaomi-sync/test"
+          if [ "$JOB_STATUS" != success ]; then
+            state=failure
+            failed="$(grep -E '^(FAILED|ERROR) ' /tmp/pytest.out 2>/dev/null | head -1 | sed -E 's/^(FAILED|ERROR) ([^ ]+).*/\2/' | cut -c1-70 || true)"
+            if [ -n "$failed" ]; then
+              context="xiaomi-sync/test:$failed"
+            fi
+          fi
+          payload="$(printf '{\"state\":\"%s\",\"context\":\"%s\",\"description\":\"pytest result\"}' "$state" "$context")"
+          curl --fail-with-body --silent --show-error \
+            -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/${{ github.repository }}/statuses/${{ github.sha }}" \
+            -d "$payload"
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    environment: vps
+    steps:
+      - name: Validate deploy secrets
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+        run: |
+          set -euo pipefail
+          test -n "$VPS_HOST" || { echo "Missing VPS_HOST secret" >&2; exit 1; }
+          test -n "$VPS_USER" || { echo "Missing VPS_USER secret" >&2; exit 1; }
+          test -n "$VPS_SSH_KEY" || { echo "Missing VPS_SSH_KEY secret" >&2; exit 1; }
+
+          case "$VPS_HOST" in
+            http://*|https://*|*@*|*/*)
+              echo "VPS_HOST must contain only a public IP address or DNS hostname (no scheme, username, path, or port)." >&2
+              exit 1
+              ;;
+          esac
+
+          if printf '%s' "$VPS_HOST" | grep -q '[[:space:]]'; then
+            echo "VPS_HOST contains whitespace; use only a public IP address or DNS hostname." >&2
+            exit 1
+          fi
+
+          PORT="${VPS_PORT:-22}"
+          case "$PORT" in
+            *[!0-9]*|'')
+              echo "VPS_PORT must be a numeric TCP port (normally 22)." >&2
+              exit 1
+              ;;
+          esac
+
+          if ! getent ahosts "$VPS_HOST" >/dev/null 2>&1; then
+            echo "VPS_HOST is not publicly resolvable from the GitHub runner." >&2
+            exit 1
+          fi
+
+      - name: Configure SSH
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+        run: |
+          set -euo pipefail
+          PORT="${VPS_PORT:-22}"
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -T 10 -p "$PORT" -H "$VPS_HOST" >> ~/.ssh/known_hosts
+
+      - name: Deploy pushed branch
+        timeout-minutes: 6
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+          DEPLOY_BRANCH: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          exec > >(tee /tmp/deploy.out) 2>&1
+          PORT="${VPS_PORT:-22}"
+          printf -v Q_BRANCH '%q' "$DEPLOY_BRANCH"
+          timeout 330s ssh \
+            -o BatchMode=yes \
+            -o ConnectTimeout=15 \
+            -o ServerAliveInterval=15 \
+            -o ServerAliveCountMax=3 \
+            -p "$PORT" "$VPS_USER@$VPS_HOST" "bash -s -- $Q_BRANCH" <<'REMOTE'
+          set -euo pipefail
+          BRANCH="$1"
+          APP_DIR="$HOME/mi-health-link"
+          DEPLOY_STAGE="init"
+          trap 'echo "[deploy-error] $DEPLOY_STAGE"' ERR
+
+          echo "[deploy] entering $APP_DIR"
+          cd "$APP_DIR"
+
+          MCP_BIND="$(.venv/bin/python - <<'PY'
+          from dotenv import dotenv_values
+          values = dotenv_values('.env')
+          host = str(values.get('MCP_HOST') or '127.0.0.1').strip()
+          port = str(values.get('MCP_PORT') or '8765').strip()
+          print(f'{host}:{port}')
+          PY
+          )"
+
+          DEPLOY_STAGE="mcp-drain"
+          if systemctl --user is-active --quiet xiaomi-health-mcp.service; then
+            echo "[deploy] waiting for active MCP sync jobs to drain before changing files"
+            deadline=$((SECONDS + 180))
+            while :; do
+              health="$(curl --fail --silent --max-time 3 "http://$MCP_BIND/health" 2>/dev/null || true)"
+              active="$(printf '%s' "$health" | .venv/bin/python -c 'import json,sys; data=json.load(sys.stdin); print(int(data.get("active_sync_jobs", 0)))' 2>/dev/null || echo 0)"
+              if [ "$active" -eq 0 ]; then
+                echo "[deploy] MCP has no active sync jobs"
+                break
+              fi
+              if [ "$SECONDS" -ge "$deadline" ]; then
+                echo "[deploy] refusing to restart MCP while $active sync job(s) are still active" >&2
+                exit 75
+              fi
+              echo "[deploy] $active sync job(s) active; waiting 2s"
+              sleep 2
+            done
+          fi
+
+          DEPLOY_STAGE="git-fetch"
+          echo "[deploy] fetching origin/$BRANCH"
+          timeout 60s git fetch --prune origin "$BRANCH"
+
+          DEPLOY_STAGE="git-checkout"
+          echo "[deploy] checking out origin/$BRANCH"
+          git checkout -B "$BRANCH" "origin/$BRANCH"
+          git reset --hard "origin/$BRANCH"
+
+          DEPLOY_STAGE="remove-vps-oauth-env"
+          echo "[deploy] removing obsolete VPS OAuth environment entries"
+          if [ -f .env ]; then
+            env_tmp="$(mktemp .env.vps-oauth-clean.XXXXXX)"
+            umask 077
+            awk '!/^(MCP_AUTH_MODE|MCP_OAUTH_)/' .env > "$env_tmp"
+            chmod --reference=.env "$env_tmp"
+            mv "$env_tmp" .env
+          fi
+
+          DEPLOY_STAGE="pip-install"
+          echo "[deploy] installing current package and runtime dependencies"
+          timeout 180s .venv/bin/python -m pip install -e .
+
+          DEPLOY_STAGE="sanity-imports"
+          echo "[deploy] sanity-checking source imports"
+          .venv/bin/python -c 'import mcp; import jwt; import uvicorn; import xiaomi_health_sync; import xiaomi_health_sync.auto_sync; import xiaomi_health_sync.nightscout_sync; import xiaomi_health_sync.s4_discover; import xiaomi_health_sync.s4_normalize; import xiaomi_health_sync.s4_audit; import xiaomi_health_sync.sync_store; import xiaomi_health_sync.mcp_server; import xiaomi_health_sync.wake_context'
+
+          DEPLOY_STAGE="sanity-clis"
+          echo "[deploy] sanity-checking CLIs"
+          .venv/bin/xiaomi-health-sync --help >/dev/null
+          .venv/bin/xiaomi-health-auto-sync --help >/dev/null
+          .venv/bin/xiaomi-health-nightscout-sync --help >/dev/null
+          test -x .venv/bin/xiaomi-health-mcp
+
+          DEPLOY_STAGE="xiaomi-timer"
+          echo "[deploy] installing automatic 15-minute sync timer"
+          install -d -m 700 "$HOME/.config/systemd/user"
+          install -m 644 deploy/xiaomi-health-auto-sync.service "$HOME/.config/systemd/user/xiaomi-health-auto-sync.service"
+          install -m 644 deploy/xiaomi-health-auto-sync.timer "$HOME/.config/systemd/user/xiaomi-health-auto-sync.timer"
+          systemctl --user daemon-reload
+          systemctl --user enable --now xiaomi-health-auto-sync.timer >/dev/null
+          systemctl --user is-active --quiet xiaomi-health-auto-sync.timer
+          echo "[deploy] automatic sync timer active"
+
+          DEPLOY_STAGE="diet-initial-sync"
+          echo "[deploy] running initial read-only Xiaomi diet sync"
+          if ! timeout 180s .venv/bin/xiaomi-health-auto-sync --key diet --recent-window-hours 24; then
+            detail="$(printf '%s' "diet-sync-failed" | tr '[:space:]' '-' | tr -cd 'A-Za-z0-9._:-' | cut -c1-55)"
+            trap - ERR
+            echo "[deploy-warning] diet-$detail (continuing deployment; timer remains active)"
+          fi
+
+          DEPLOY_STAGE="nightscout-install"
+          echo "[deploy] installing automatic 5-minute Nightscout glucose timer"
+          install -m 644 deploy/xiaomi-health-nightscout-sync.service "$HOME/.config/systemd/user/xiaomi-health-nightscout-sync.service"
+          install -m 644 deploy/xiaomi-health-nightscout-sync.timer "$HOME/.config/systemd/user/xiaomi-health-nightscout-sync.timer"
+          systemctl --user daemon-reload
+
+          DEPLOY_STAGE="nightscout-initial-sync"
+          echo "[deploy] running initial Nightscout glucose sync"
+          if ! timeout 120s systemctl --user start xiaomi-health-nightscout-sync.service; then
+            detail="$(journalctl --user -u xiaomi-health-nightscout-sync.service -n 40 --no-pager -o cat 2>/dev/null | grep -E 'Nightscout synchronization failed|Traceback|HTTP|glucose_samples|error|Error' | tail -1 || true)"
+            if [ -z "$detail" ]; then
+              detail="$(journalctl --user -u xiaomi-health-nightscout-sync.service -n 1 --no-pager -o cat 2>/dev/null || true)"
+            fi
+            detail="$(printf '%s' "$detail" | tr '[:space:]' '-' | tr -cd 'A-Za-z0-9._:-' | cut -c1-55)"
+            [ -n "$detail" ] || detail="service-failed"
+            trap - ERR
+            echo "[deploy-warning] nightscout-$detail (continuing MCP deployment)"
+          fi
+
+          DEPLOY_STAGE="nightscout-timer"
+          systemctl --user enable --now xiaomi-health-nightscout-sync.timer >/dev/null
+          systemctl --user is-active --quiet xiaomi-health-nightscout-sync.timer
+          echo "[deploy] Nightscout glucose timer active"
+
+          DEPLOY_STAGE="mcp-service"
+          MCP_READY="$(.venv/bin/python - <<'PY'
+          from dotenv import dotenv_values
+
+          values = dotenv_values('.env')
+          required = (
+              'MCP_PUBLIC_URL',
+              'SUPABASE_AUTH_ISSUER_URL',
+              'SUPABASE_AUTH_JWKS_URL',
+              'MCP_ALLOWED_SUBJECT',
+              'SUPABASE_PROJECT_URL',
+              'SUPABASE_PUBLISHABLE_KEY',
+          )
+          ready = all(str(values.get(name) or '').strip() for name in required)
+          placeholders = ('YOUR_', 'example.com', 'project-ref', '00000000-0000-0000-0000-000000000000')
+          if ready:
+              ready = not any(
+                  marker in str(values.get(name) or '')
+                  for name in required
+                  for marker in placeholders
+              )
+          print('yes' if ready else 'no')
+          PY
+          )"
+
+          if [ "$MCP_READY" = yes ]; then
+            echo "[deploy] MCP environment is configured; installing user service"
+            install -m 644 deploy/xiaomi-health-mcp.service "$HOME/.config/systemd/user/xiaomi-health-mcp.service"
+            systemctl --user daemon-reload
+            systemctl --user enable xiaomi-health-mcp.service >/dev/null
+            systemctl --user restart xiaomi-health-mcp.service
+            echo "[deploy] waiting for MCP health on http://$MCP_BIND/health"
+            timeout 20s bash -c 'until curl --fail --silent "http://$1/health" >/dev/null; do sleep 1; done' _ "$MCP_BIND"
+            systemctl --user is-active --quiet xiaomi-health-mcp.service
+            echo "[deploy] MCP service healthy on $MCP_BIND"
+          else
+            echo "[deploy] MCP environment not configured yet; service activation deferred"
+          fi
+
+          DEPLOY_STAGE="wake-polling-disable"
+          echo "[deploy] disabling obsolete wake polling service"
+          systemctl --user disable --now xiaomi-health-wake-monitor.service >/dev/null 2>&1 || true
+
+          DEPLOY_STAGE="complete"
+          echo "[deploy] complete"
+          git log -1 --oneline
+          REMOTE
+
+      - name: Publish deploy status
+        if: ${{ always() }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          JOB_STATUS: ${{ job.status }}
+        run: |
+          set -euo pipefail
+          state=success
+          context="xiaomi-sync/deploy"
+          if [ "$JOB_STATUS" != success ]; then
+            state=failure
+            failed_stage="$(grep -E '^\[deploy-error\] ' /tmp/deploy.out 2>/dev/null | tail -1 | sed -E 's/^\[deploy-error\] //' | tr -cd 'A-Za-z0-9._:-' | cut -c1-75 || true)"
+            if [ -n "$failed_stage" ]; then
+              context="xiaomi-sync/deploy:$failed_stage"
+            fi
+          fi
+          payload="$(printf '{\"state\":\"%s\",\"context\":\"%s\",\"description\":\"VPS deploy result\"}' "$state" "$context")"
+          curl --fail-with-body --silent --show-error \
+            -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/${{ github.repository }}/statuses/${{ github.sha }}" \
+            -d "$payload"
