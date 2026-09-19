@@ -8,7 +8,7 @@ from starlette.applications import Starlette
 from starlette.responses import JSONResponse
 from starlette.routing import Route
 
-from xiaomi_health_sync.mcp_server import MCPDiagnosticsMiddleware
+from mi_health_link.mcp_server import MCPDiagnosticsMiddleware
 
 
 def test_diagnostics_log_method_and_tool_count_without_params(caplog) -> None:
@@ -46,7 +46,7 @@ def test_diagnostics_log_method_and_tool_count_without_params(caplog) -> None:
             )
             assert response.status_code == 200
 
-    with caplog.at_level(logging.INFO, logger="xiaomi_health_sync.mcp_server"):
+    with caplog.at_level(logging.INFO, logger="mi_health_link.mcp_server"):
         asyncio.run(run())
 
     assert "MCP request method=tools/list" in caplog.text

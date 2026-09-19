@@ -3,8 +3,8 @@ from __future__ import annotations
 import httpx
 import pytest
 
-import xiaomi_health_sync.mcp_sync as mcp_sync
-from xiaomi_health_sync.xiaomi import XiaomiResponse
+import mi_health_link.mcp_sync as mcp_sync
+from mi_health_link.xiaomi import XiaomiResponse
 
 
 def test_targeted_sync_failure_persists_failed_source_check(monkeypatch) -> None:

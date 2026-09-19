@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 
 import pytest
 
-from xiaomi_health_sync.nightscout_sync import (
+from mi_health_link.nightscout_sync import (
     NightscoutEntryError,
     build_entries_params,
     parse_entry,

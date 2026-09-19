@@ -1,7 +1,7 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { build } from "esbuild";
 
-const outfile = "src/xiaomi_health_sync/static/oauth-consent.js";
+const outfile = "src/mi_health_link/static/oauth-consent.js";
 
 await build({
   entryPoints: ["web/oauth-consent.js"],

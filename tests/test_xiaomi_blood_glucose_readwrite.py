@@ -3,9 +3,9 @@ from __future__ import annotations
 import importlib.util
 import json
 
-import xiaomi_health_sync.blood_glucose as blood_glucose
-from xiaomi_health_sync.sync_store import DirectSupabaseStore, VERIFIED_BOOTSTRAP_KEYS
-from xiaomi_health_sync.xiaomi import XiaomiResponse
+import mi_health_link.blood_glucose as blood_glucose
+from mi_health_link.sync_store import DirectSupabaseStore, VERIFIED_BOOTSTRAP_KEYS
+from mi_health_link.xiaomi import XiaomiResponse
 
 
 def test_only_observed_manual_glucose_key_is_polled_by_normal_sync():
@@ -40,7 +40,7 @@ def test_single_blood_sugar_is_normalized_into_glucose_samples():
 
 
 def test_xiaomi_blood_glucose_writer_module_exists():
-    assert importlib.util.find_spec("xiaomi_health_sync.blood_glucose") is not None
+    assert importlib.util.find_spec("mi_health_link.blood_glucose") is not None
 
 
 def test_upload_payload_matches_real_xiaomi_manual_glucose_template():

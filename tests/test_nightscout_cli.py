@@ -1,4 +1,4 @@
-from xiaomi_health_sync.nightscout_sync import build_parser
+from mi_health_link.nightscout_sync import build_parser
 
 
 def test_nightscout_cli_defaults_are_safe_and_incremental():

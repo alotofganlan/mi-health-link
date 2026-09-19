@@ -2,14 +2,14 @@ from datetime import datetime, timezone
 
 import pytest
 
-from xiaomi_health_sync.auto_discovery import (
+from mi_health_link.auto_discovery import (
     AutoDiscoveryRunner,
     DiscoveryError,
     XiaomiAuthExpiredError,
     extract_latest_keys,
 )
-from xiaomi_health_sync.history_policy import initial_backfill_start_time
-from xiaomi_health_sync.xiaomi import XiaomiResponse
+from mi_health_link.history_policy import initial_backfill_start_time
+from mi_health_link.xiaomi import XiaomiResponse
 
 
 class FakeClient:

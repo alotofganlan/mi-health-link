@@ -9,9 +9,9 @@ import time
 
 from mcp import Client
 
-import xiaomi_health_sync.mcp_sync as mcp_sync
-from xiaomi_health_sync.mcp_config import MCPSettings
-from xiaomi_health_sync.mcp_server import create_mcp_server
+import mi_health_link.mcp_sync as mcp_sync
+from mi_health_link.mcp_config import MCPSettings
+from mi_health_link.mcp_server import create_mcp_server
 
 
 class RejectAllVerifier:

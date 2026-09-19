@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 
-from xiaomi_health_sync.auto_discovery import AutoDiscoveryRunner
-from xiaomi_health_sync.xiaomi import XiaomiResponse
+from mi_health_link.auto_discovery import AutoDiscoveryRunner
+from mi_health_link.xiaomi import XiaomiResponse
 
 
 class FakeClient:

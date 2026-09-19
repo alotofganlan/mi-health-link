@@ -2,7 +2,7 @@
 set -euo pipefail
 
 APP_DIR="${APP_DIR:-$HOME/mi-health-link}"
-AUTH_DIR="$HOME/.config/xiaomi-health-sync"
+AUTH_DIR="$HOME/.config/mi-health-link"
 AUTH_FILE="$AUTH_DIR/nightscout.env"
 
 command -v docker >/dev/null 2>&1 || {

@@ -7,5 +7,5 @@ Wants=network-online.target
 Type=oneshot
 WorkingDirectory=%h/mi-health-link
 EnvironmentFile=%h/mi-health-link/.env
-ExecStart=%h/mi-health-link/.venv/bin/xiaomi-health-auto-sync --recent-window-hours 24 --latest-limit 30
+ExecStart=%h/mi-health-link/.venv/bin/mi-health-link-auto-sync --recent-window-hours 24 --latest-limit 30
 Nice=10

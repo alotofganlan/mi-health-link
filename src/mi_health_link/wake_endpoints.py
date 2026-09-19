@@ -8,7 +8,7 @@ from .wake_payloads import parse_location_update_payload, parse_unlock_payload
 from .wake_report import SleepReportResult
 
 
-LOG = logging.getLogger("xiaomi-health-wake-endpoints")
+LOG = logging.getLogger("mi-health-link-wake-endpoints")
 
 
 def _env_int(name: str, default: int) -> int:

@@ -1,4 +1,4 @@
-from xiaomi_health_sync.metric_mapping import map_health_value
+from mi_health_link.metric_mapping import map_health_value
 
 
 def test_weight_mapping_verified_healthy_body_shape():

@@ -1,8 +1,8 @@
-from xiaomi_health_sync.special_discovery import (
+from mi_health_link.special_discovery import (
     default_special_probes,
     run_special_probes,
 )
-from xiaomi_health_sync.xiaomi import XiaomiResponse
+from mi_health_link.xiaomi import XiaomiResponse
 
 
 class FakeClient:

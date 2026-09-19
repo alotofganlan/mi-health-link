@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime, time, timedelta, timezone
 
-from xiaomi_health_sync.wake_versions import (
+from mi_health_link.wake_versions import (
     canonical_sleep_version,
     select_report_candidate,
     select_unreported_sleep,

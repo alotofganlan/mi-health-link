@@ -41,7 +41,7 @@ def oauth_consent_response(request: Request, settings: MCPSettings) -> Response:
         return PlainTextResponse("Missing authorization_id", status_code=400)
 
     template = (
-        files("xiaomi_health_sync")
+        files("mi_health_link")
         .joinpath("static/oauth-consent.html")
         .read_text(encoding="utf-8")
     )
@@ -60,7 +60,7 @@ def oauth_consent_response(request: Request, settings: MCPSettings) -> Response:
 
 def oauth_consent_script_response() -> Response:
     body = (
-        files("xiaomi_health_sync")
+        files("mi_health_link")
         .joinpath("static/oauth-consent.js")
         .read_text(encoding="utf-8")
     )

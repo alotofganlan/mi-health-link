@@ -3,7 +3,7 @@ requires = ["setuptools>=69", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "xiaomi-health-sync"
+name = "mi-health-link"
 version = "0.6.0"
 description = "Xiaomi Health Cloud auto-discovery and Supabase raw-data sync."
 requires-python = ">=3.11"
@@ -17,17 +17,17 @@ dependencies = [
 ]
 
 [project.scripts]
-xiaomi-health-sync = "xiaomi_health_sync.cli:main"
-xiaomi-health-sync-s4 = "xiaomi_health_sync.s4_discover:main"
-xiaomi-health-sync-s4-normalize = "xiaomi_health_sync.s4_normalize:main"
-xiaomi-health-sync-s4-audit = "xiaomi_health_sync.s4_audit:main"
-xiaomi-health-auto-sync = "xiaomi_health_sync.auto_sync:main"
-xiaomi-health-nightscout-sync = "xiaomi_health_sync.nightscout_sync:main"
-xiaomi-health-blood-glucose = "xiaomi_health_sync.blood_glucose_cli:main"
-xiaomi-health-mcp = "xiaomi_health_sync.mcp_server:main"
+mi-health-link = "mi_health_link.cli:main"
+mi-health-link-s4 = "mi_health_link.s4_discover:main"
+mi-health-link-s4-normalize = "mi_health_link.s4_normalize:main"
+mi-health-link-s4-audit = "mi_health_link.s4_audit:main"
+mi-health-link-auto-sync = "mi_health_link.auto_sync:main"
+mi-health-link-nightscout-sync = "mi_health_link.nightscout_sync:main"
+mi-health-link-blood-glucose = "mi_health_link.blood_glucose_cli:main"
+mi-health-link-mcp = "mi_health_link.mcp_server:main"
 
 [tool.setuptools.package-data]
-xiaomi_health_sync = ["static/*.html", "static/*.js"]
+mi_health_link = ["static/*.html", "static/*.js"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]

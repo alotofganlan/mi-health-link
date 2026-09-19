@@ -5,8 +5,8 @@ import asyncio
 import httpx
 from mcp import Client
 
-from xiaomi_health_sync.mcp_config import MCPSettings
-from xiaomi_health_sync.mcp_server import create_mcp_app, create_mcp_server
+from mi_health_link.mcp_config import MCPSettings
+from mi_health_link.mcp_server import create_mcp_app, create_mcp_server
 
 
 class RejectAllVerifier:

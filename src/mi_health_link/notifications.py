@@ -14,7 +14,7 @@ XIAOMI_AUTH_EXPIRED_MESSAGE = (
     "then update the VPS Xiaomi credentials."
 )
 DEFAULT_STATE_FILE = (
-    Path.home() / ".local" / "state" / "xiaomi-health-sync" / "xiaomi-auth-ntfy.json"
+    Path.home() / ".local" / "state" / "mi-health-link" / "xiaomi-auth-ntfy.json"
 )
 
 

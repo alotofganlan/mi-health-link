@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from xiaomi_health_sync.diet import normalize_diet_records
+from mi_health_link.diet import normalize_diet_records
 
 
 @pytest.mark.parametrize(

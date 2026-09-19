@@ -2,7 +2,7 @@ import json
 
 import httpx
 
-from xiaomi_health_sync.sync_store import DirectSupabaseStore, VERIFIED_BOOTSTRAP_KEYS
+from mi_health_link.sync_store import DirectSupabaseStore, VERIFIED_BOOTSTRAP_KEYS
 
 
 def _store(handler):

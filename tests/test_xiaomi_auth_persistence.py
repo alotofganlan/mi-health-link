@@ -4,8 +4,8 @@ import json
 
 import httpx
 
-from xiaomi_health_sync.auth import import_credentials, refresh_session_with_pass_token
-from xiaomi_health_sync.config import load_credentials
+from mi_health_link.auth import import_credentials, refresh_session_with_pass_token
+from mi_health_link.config import load_credentials
 
 
 def test_import_auth_preserves_account_session_for_future_refresh(tmp_path) -> None:
@@ -67,7 +67,7 @@ def test_refresh_keeps_account_pass_token_in_rotated_credentials() -> None:
 
 
 def test_interactive_login_persists_pass_token_returned_in_json(tmp_path, monkeypatch) -> None:
-    from xiaomi_health_sync import auth
+    from mi_health_link import auth
 
     class FakeResponse:
         def __init__(self, text: str, status_code: int = 200) -> None:

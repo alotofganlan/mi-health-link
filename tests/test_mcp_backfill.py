@@ -7,11 +7,11 @@ import time
 import pytest
 from mcp import Client
 
-from xiaomi_health_sync.auto_discovery import AutoDiscoveryRunner
-from xiaomi_health_sync.mcp_config import MCPSettings
-from xiaomi_health_sync.mcp_server import create_mcp_server
-from xiaomi_health_sync.mcp_sync import SyncJobManager
-from xiaomi_health_sync.xiaomi import XiaomiResponse
+from mi_health_link.auto_discovery import AutoDiscoveryRunner
+from mi_health_link.mcp_config import MCPSettings
+from mi_health_link.mcp_server import create_mcp_server
+from mi_health_link.mcp_sync import SyncJobManager
+from mi_health_link.xiaomi import XiaomiResponse
 
 
 class RejectAllVerifier:

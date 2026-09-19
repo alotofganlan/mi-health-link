@@ -4,9 +4,9 @@ import json
 
 import httpx
 
-from xiaomi_health_sync import auth
-from xiaomi_health_sync.config import Settings, XiaomiCredentials, load_settings
-from xiaomi_health_sync.xiaomi import XiaomiHealthClient
+from mi_health_link import auth
+from mi_health_link.config import Settings, XiaomiCredentials, load_settings
+from mi_health_link.xiaomi import XiaomiHealthClient
 
 
 def _session_payload() -> str:

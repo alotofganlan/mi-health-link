@@ -4,8 +4,8 @@ import json
 
 import pytest
 
-import xiaomi_health_sync.blood_glucose as blood_glucose
-from xiaomi_health_sync.xiaomi import XiaomiResponse
+import mi_health_link.blood_glucose as blood_glucose
+from mi_health_link.xiaomi import XiaomiResponse
 
 
 def test_continuous_payload_batches_multiple_points_without_measurement_period():

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from xiaomi_health_sync.mcp_config import load_mcp_settings
+from mi_health_link.mcp_config import load_mcp_settings
 
 
 def _set_required_env(monkeypatch: pytest.MonkeyPatch) -> None:

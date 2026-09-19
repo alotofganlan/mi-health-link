@@ -31,7 +31,7 @@ class LatestNightscoutSample:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="xiaomi-health-blood-glucose")
+    parser = argparse.ArgumentParser(prog="mi-health-link-blood-glucose")
     sub = parser.add_subparsers(dest="command", required=True)
 
     read = sub.add_parser("read", help="Read manual blood glucose records from Xiaomi Cloud.")

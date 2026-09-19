@@ -5,9 +5,9 @@ from datetime import datetime, timedelta, timezone
 import importlib.util
 from pathlib import Path
 
-from xiaomi_health_sync.wake_context import WakeContextService
-from xiaomi_health_sync.wake_report import SleepReportService
-from xiaomi_health_sync.wake_store import Delivery, Presence
+from mi_health_link.wake_context import WakeContextService
+from mi_health_link.wake_report import SleepReportService
+from mi_health_link.wake_store import Delivery, Presence
 
 
 CST = timezone(timedelta(hours=8))

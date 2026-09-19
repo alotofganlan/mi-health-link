@@ -3,8 +3,8 @@ from __future__ import annotations
 from datetime import date, timedelta
 from zoneinfo import ZoneInfo
 
-from xiaomi_health_sync.mcp_health_data import METRIC_SOURCES
-from xiaomi_health_sync.morning_health import MORNING_METRICS, MorningHealthService
+from mi_health_link.mcp_health_data import METRIC_SOURCES
+from mi_health_link.morning_health import MORNING_METRICS, MorningHealthService
 
 
 def _boundary(kind: str, day: str) -> dict[str, str]:

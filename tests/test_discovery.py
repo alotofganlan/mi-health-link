@@ -1,4 +1,4 @@
-from xiaomi_health_sync.discovery import (
+from mi_health_link.discovery import (
     summarize_discovery_response,
     summary_payload,
 )

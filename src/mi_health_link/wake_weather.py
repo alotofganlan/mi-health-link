@@ -90,7 +90,7 @@ class WakeWeather:
                         "accept-language": "en,zh-CN;q=0.8",
                     },
                     headers={
-                        "User-Agent": "xiaomi-health-sync/0.6"
+                        "User-Agent": "mi-health-link/0.6"
                     },
                 )
                 response.raise_for_status()

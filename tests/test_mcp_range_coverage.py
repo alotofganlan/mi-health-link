@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from xiaomi_health_sync.mcp_coverage import classify_coverage, ranges_cover_window
+from mi_health_link.mcp_coverage import classify_coverage, ranges_cover_window
 
 
 def test_contiguous_successful_ranges_cover_requested_window() -> None:

@@ -1,4 +1,4 @@
-from xiaomi_health_sync.history_policy import DAY_SECONDS, initial_backfill_start_time
+from mi_health_link.history_policy import DAY_SECONDS, initial_backfill_start_time
 
 
 def test_sleep_initial_backfill_is_one_year():

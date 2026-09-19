@@ -18,7 +18,7 @@ from .xiaomi import XiaomiHealthClient
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="xiaomi-health-auto-sync")
+    parser = argparse.ArgumentParser(prog="mi-health-link-auto-sync")
     parser.add_argument(
         "--recent-window-hours",
         type=int,

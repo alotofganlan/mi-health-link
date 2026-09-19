@@ -1,6 +1,6 @@
 import base64
 
-from xiaomi_health_sync.crypto import (
+from mi_health_link.crypto import (
     RC4,
     decrypt_response,
     generate_nonce,

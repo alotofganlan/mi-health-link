@@ -6,5 +6,5 @@ COPY src ./src
 RUN pip install --no-cache-dir .
 
 COPY presets.example.json ./
-ENTRYPOINT ["xiaomi-health-sync"]
+ENTRYPOINT ["mi-health-link"]
 CMD ["show-config"]

@@ -124,7 +124,7 @@ chmod 600 .env xiaomi-credentials.json
 如果一切正常，你会看到：
 
 ```bash
-.venv/bin/xiaomi-health-sync --help
+.venv/bin/mi-health-link --help
 ```
 
 应该显示命令帮助，而不是 Python 导入错误。
@@ -157,7 +157,7 @@ XIAOMI_CREDENTIALS_FILE=./xiaomi-credentials.json
 检查配置时使用：
 
 ```bash
-.venv/bin/xiaomi-health-sync show-config
+.venv/bin/mi-health-link show-config
 ```
 
 该命令用于查看脱敏后的配置状态。不要用会把 `.env` 原文打印到终端或聊天中的命令。
@@ -168,7 +168,7 @@ XIAOMI_CREDENTIALS_FILE=./xiaomi-credentials.json
 
 ```bash
 cd "$HOME/mi-health-link"
-.venv/bin/xiaomi-health-sync login
+.venv/bin/mi-health-link login
 ```
 
 按终端提示完成登录。如果小米要求验证码、设备确认或风险验证，先在官方页面完成，再重新执行命令。
@@ -184,7 +184,7 @@ xiaomi-credentials.json
 ### 4.2 第一次同步
 
 ```bash
-.venv/bin/xiaomi-health-sync discover
+.venv/bin/mi-health-link discover
 ```
 
 第一次运行可能比日常同步慢，因为它会发现小米实际返回过的健康键并回填历史。
@@ -203,18 +203,18 @@ xiaomi-credentials.json
 
 ```bash
 mkdir -p "$HOME/.config/systemd/user"
-install -m 644 deploy/xiaomi-health-auto-sync.service "$HOME/.config/systemd/user/"
-install -m 644 deploy/xiaomi-health-auto-sync.timer "$HOME/.config/systemd/user/"
+install -m 644 deploy/mi-health-link-auto-sync.service "$HOME/.config/systemd/user/"
+install -m 644 deploy/mi-health-link-auto-sync.timer "$HOME/.config/systemd/user/"
 systemctl --user daemon-reload
-systemctl --user enable --now xiaomi-health-auto-sync.timer
+systemctl --user enable --now mi-health-link-auto-sync.timer
 sudo loginctl enable-linger "$USER"
 ```
 
 检查：
 
 ```bash
-systemctl --user status xiaomi-health-auto-sync.timer
-journalctl --user -u xiaomi-health-auto-sync.service -n 100 --no-pager
+systemctl --user status mi-health-link-auto-sync.timer
+journalctl --user -u mi-health-link-auto-sync.service -n 100 --no-pager
 ```
 
 如果一切正常，定时器状态会显示为 active，最近一次同步也不会出现认证或数据库错误。
@@ -248,9 +248,9 @@ SUPABASE_PUBLISHABLE_KEY=<PUBLISHABLE_KEY>
 安装并启动 MCP 服务：
 
 ```bash
-install -m 644 deploy/xiaomi-health-mcp.service "$HOME/.config/systemd/user/"
+install -m 644 deploy/mi-health-link-mcp.service "$HOME/.config/systemd/user/"
 systemctl --user daemon-reload
-systemctl --user enable --now xiaomi-health-mcp.service
+systemctl --user enable --now mi-health-link-mcp.service
 curl --fail http://127.0.0.1:8765/health
 ```
 
@@ -484,7 +484,7 @@ XIAOMI_AUTH_NTFY_TOKEN=
 ```bash
 curl --fail https://<PUBLIC_HOST>/health
 curl --fail https://<PUBLIC_HOST>/.well-known/oauth-protected-resource/mcp
-journalctl --user -u xiaomi-health-mcp.service -n 100 --no-pager
+journalctl --user -u mi-health-link-mcp.service -n 100 --no-pager
 ```
 
 另外确认 ChatGPT 账号拥有创建自定义 MCP 应用的权限。
@@ -494,8 +494,8 @@ journalctl --user -u xiaomi-health-mcp.service -n 100 --no-pager
 先检查同步：
 
 ```bash
-.venv/bin/xiaomi-health-sync discover
-journalctl --user -u xiaomi-health-auto-sync.service -n 100 --no-pager
+.venv/bin/mi-health-link discover
+journalctl --user -u mi-health-link-auto-sync.service -n 100 --no-pager
 ```
 
 确认小米区域正确、登录会话没有过期，并在 Supabase Table Editor 检查是否已有记录。
@@ -505,8 +505,8 @@ journalctl --user -u xiaomi-health-auto-sync.service -n 100 --no-pager
 重启相关服务：
 
 ```bash
-systemctl --user restart xiaomi-health-mcp.service
-systemctl --user start xiaomi-health-auto-sync.service
+systemctl --user restart mi-health-link-mcp.service
+systemctl --user start mi-health-link-auto-sync.service
 ```
 
 ### 手机解锁后没有晨报
@@ -524,10 +524,10 @@ systemctl --user start xiaomi-health-auto-sync.service
 常用检查命令：
 
 ```bash
-systemctl --user status xiaomi-health-mcp.service
-systemctl --user status xiaomi-health-auto-sync.timer
-journalctl --user -u xiaomi-health-mcp.service -n 100 --no-pager
-journalctl --user -u xiaomi-health-auto-sync.service -n 100 --no-pager
+systemctl --user status mi-health-link-mcp.service
+systemctl --user status mi-health-link-auto-sync.timer
+journalctl --user -u mi-health-link-mcp.service -n 100 --no-pager
+journalctl --user -u mi-health-link-auto-sync.service -n 100 --no-pager
 ```
 
 定期完成：

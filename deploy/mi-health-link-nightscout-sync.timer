@@ -6,7 +6,7 @@ OnBootSec=1min
 OnUnitActiveSec=5min
 AccuracySec=30s
 Persistent=true
-Unit=xiaomi-health-nightscout-sync.service
+Unit=mi-health-link-nightscout-sync.service
 
 [Install]
 WantedBy=timers.target

@@ -6,7 +6,7 @@ OnBootSec=2min
 OnUnitActiveSec=15min
 AccuracySec=1min
 Persistent=true
-Unit=xiaomi-health-auto-sync.service
+Unit=mi-health-link-auto-sync.service
 
 [Install]
 WantedBy=timers.target

@@ -4,10 +4,10 @@ import json
 
 import httpx
 
-from xiaomi_health_sync.diet import normalize_diet_records
-from xiaomi_health_sync.diet_sync import DietSyncRunner
-from xiaomi_health_sync.supabase_store import SupabaseStore
-from xiaomi_health_sync.xiaomi import XiaomiResponse
+from mi_health_link.diet import normalize_diet_records
+from mi_health_link.diet_sync import DietSyncRunner
+from mi_health_link.supabase_store import SupabaseStore
+from mi_health_link.xiaomi import XiaomiResponse
 
 
 def _raw_record(*, watermark: str = "wm-1", time: int = 1788250638) -> dict:

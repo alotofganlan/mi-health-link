@@ -9,8 +9,8 @@ from zoneinfo import ZoneInfo
 
 import httpx
 
-from xiaomi_health_sync.config import load_settings
-from xiaomi_health_sync.mcp_health_data import METRIC_SOURCES, NormalizedHealthReader
+from mi_health_link.config import load_settings
+from mi_health_link.mcp_health_data import METRIC_SOURCES, NormalizedHealthReader
 
 
 HEALTH_METRICS = tuple(metric for metric in METRIC_SOURCES if metric != "sleep")

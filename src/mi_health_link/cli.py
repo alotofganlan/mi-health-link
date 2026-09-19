@@ -254,7 +254,7 @@ def cmd_probe_presets(args: argparse.Namespace) -> int:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(prog="xiaomi-health-sync")
+    p = argparse.ArgumentParser(prog="mi-health-link")
     sub = p.add_subparsers(dest="command", required=True)
 
     s = sub.add_parser("login")

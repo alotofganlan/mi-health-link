@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 
-from xiaomi_health_sync.wake_endpoints import LocationUpdateService, UnlockProbeService
-from xiaomi_health_sync.wake_report import SleepReportResult
-from xiaomi_health_sync.wake_weather import ResolvedPlace
+from mi_health_link.wake_endpoints import LocationUpdateService, UnlockProbeService
+from mi_health_link.wake_report import SleepReportResult
+from mi_health_link.wake_weather import ResolvedPlace
 
 
 CST = timezone(timedelta(hours=8))

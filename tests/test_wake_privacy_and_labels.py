@@ -6,9 +6,9 @@ import logging
 from pathlib import Path
 from types import SimpleNamespace
 
-import xiaomi_health_sync.mcp_server as mcp_server
-import xiaomi_health_sync.wake_report as wake_report
-from xiaomi_health_sync.wake_context import WakeContextService
+import mi_health_link.mcp_server as mcp_server
+import mi_health_link.wake_report as wake_report
+from mi_health_link.wake_context import WakeContextService
 
 
 REPORT_PATH = Path(__file__).parents[1] / "slack_morning_report.py"
@@ -92,7 +92,7 @@ def test_mcp_server_disables_client_ip_access_log(monkeypatch) -> None:
 
 
 def test_runtime_logs_do_not_embed_health_or_location_details() -> None:
-    source_root = Path(__file__).parents[1] / "src" / "xiaomi_health_sync"
+    source_root = Path(__file__).parents[1] / "src" / "mi_health_link"
     sources = "\n".join(
         (source_root / name).read_text(encoding="utf-8")
         for name in (

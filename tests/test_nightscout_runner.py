@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import httpx
 
-from xiaomi_health_sync.nightscout_sync import sync_nightscout
+from mi_health_link.nightscout_sync import sync_nightscout
 
 
 class FakeGlucoseStore:

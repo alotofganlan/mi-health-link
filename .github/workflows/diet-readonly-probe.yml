@@ -73,8 +73,8 @@ jobs:
           from datetime import datetime, timedelta
           from zoneinfo import ZoneInfo
 
-          from xiaomi_health_sync.config import load_credentials, load_settings
-          from xiaomi_health_sync.xiaomi import XiaomiHealthClient
+          from mi_health_link.config import load_credentials, load_settings
+          from mi_health_link.xiaomi import XiaomiHealthClient
 
           settings = load_settings()
           credentials = load_credentials(settings.credentials_file, settings.region)

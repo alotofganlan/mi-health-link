@@ -162,7 +162,7 @@ def sync_nightscout(
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="xiaomi-health-nightscout-sync")
+    parser = argparse.ArgumentParser(prog="mi-health-link-nightscout-sync")
     parser.add_argument("--url", default=None, help="Nightscout base URL; defaults to NIGHTSCOUT_URL.")
     parser.add_argument("--token", default=None, help="Nightscout access token; defaults to NIGHTSCOUT_TOKEN.")
     parser.add_argument("--batch-size", type=int, default=1000)

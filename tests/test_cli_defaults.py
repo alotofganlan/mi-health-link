@@ -1,4 +1,4 @@
-from xiaomi_health_sync.cli import build_parser
+from mi_health_link.cli import build_parser
 
 
 def test_discover_uses_per_key_history_policy_by_default():

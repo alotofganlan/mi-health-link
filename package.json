@@ -1,5 +1,5 @@
 {
-  "name": "xiaomi-health-sync-web-assets",
+  "name": "mi-health-link-web-assets",
   "private": true,
   "engines": {
     "node": ">=22"

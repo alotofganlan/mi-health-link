@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from types import SimpleNamespace
 
-import xiaomi_health_sync.blood_glucose_cli as glucose_cli
+import mi_health_link.blood_glucose_cli as glucose_cli
 
 
 def test_inspect_cgm_recent_command_is_read_only():

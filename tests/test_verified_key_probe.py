@@ -1,8 +1,8 @@
-from xiaomi_health_sync.verified_key_probe import (
+from mi_health_link.verified_key_probe import (
     WATCH_S4_41MM_VERIFIED_PROBE_KEYS,
     probe_verified_persist_keys,
 )
-from xiaomi_health_sync.xiaomi import XiaomiResponse
+from mi_health_link.xiaomi import XiaomiResponse
 
 
 class FakeClient:

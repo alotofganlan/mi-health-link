@@ -5,8 +5,8 @@ from datetime import datetime, timezone
 
 import httpx
 
-from xiaomi_health_sync.nightscout_sync import fetch_entries
-from xiaomi_health_sync.sync_store import DirectSupabaseStore
+from mi_health_link.nightscout_sync import fetch_entries
+from mi_health_link.sync_store import DirectSupabaseStore
 
 
 def test_fetch_entries_pages_backward_without_losing_records():

@@ -2,14 +2,14 @@ from __future__ import annotations
 
 import json
 
-from xiaomi_health_sync.intensity_write import (
+from mi_health_link.intensity_write import (
     XiaomiIntensityVerificationError,
     build_intensity_upload,
     qualifying_intensity_minutes,
     repair_intensity_from_heart_rate,
     write_intensity_minutes,
 )
-from xiaomi_health_sync.xiaomi import XiaomiResponse
+from mi_health_link.xiaomi import XiaomiResponse
 
 
 def test_qualifying_minutes_use_64_percent_threshold_and_exclude_existing():

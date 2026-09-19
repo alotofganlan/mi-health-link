@@ -9,8 +9,8 @@ import jwt
 import pytest
 from cryptography.hazmat.primitives.asymmetric import ec, rsa
 
-from xiaomi_health_sync.mcp_auth import SupabaseTokenVerifier
-from xiaomi_health_sync.mcp_config import MCPSettings
+from mi_health_link.mcp_auth import SupabaseTokenVerifier
+from mi_health_link.mcp_config import MCPSettings
 
 
 ISSUER = "https://project.supabase.co/auth/v1"

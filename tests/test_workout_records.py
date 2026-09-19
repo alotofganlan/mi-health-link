@@ -1,4 +1,4 @@
-from xiaomi_health_sync.workout_records import extract_workout_records, workout_table_rows
+from mi_health_link.workout_records import extract_workout_records, workout_table_rows
 
 
 def test_extract_workout_records_parses_real_xiaomi_value_json():

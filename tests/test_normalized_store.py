@@ -2,8 +2,8 @@ import json
 
 import httpx
 
-from xiaomi_health_sync.health_records import normalize_data_item
-from xiaomi_health_sync.supabase_store import SupabaseStore
+from mi_health_link.health_records import normalize_data_item
+from mi_health_link.supabase_store import SupabaseStore
 
 
 def _store(handler):

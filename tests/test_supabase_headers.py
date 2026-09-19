@@ -1,4 +1,4 @@
-from xiaomi_health_sync.supabase_store import SupabaseStore
+from mi_health_link.supabase_store import SupabaseStore
 
 
 def test_modern_secret_key_uses_apikey_only():

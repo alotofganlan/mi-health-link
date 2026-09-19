@@ -4,9 +4,9 @@ import asyncio
 
 import httpx
 
-from xiaomi_health_sync.mcp_config import MCPSettings
-from xiaomi_health_sync.mcp_server import create_mcp_app
-from xiaomi_health_sync.wake_report import SleepReportResult
+from mi_health_link.mcp_config import MCPSettings
+from mi_health_link.mcp_server import create_mcp_app
+from mi_health_link.wake_report import SleepReportResult
 
 
 class RejectAllVerifier:

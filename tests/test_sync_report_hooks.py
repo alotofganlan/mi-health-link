@@ -3,8 +3,8 @@ from __future__ import annotations
 import argparse
 from dataclasses import dataclass
 
-import xiaomi_health_sync.auto_sync as auto_sync
-import xiaomi_health_sync.mcp_sync as mcp_sync
+import mi_health_link.auto_sync as auto_sync
+import mi_health_link.mcp_sync as mcp_sync
 
 
 @dataclass

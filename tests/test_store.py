@@ -1,6 +1,6 @@
 import httpx
 
-from xiaomi_health_sync.supabase_store import SupabaseStore, stable_source_record_id
+from mi_health_link.supabase_store import SupabaseStore, stable_source_record_id
 
 
 def test_stable_record_id_ignores_json_key_order():

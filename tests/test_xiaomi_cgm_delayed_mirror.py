@@ -4,8 +4,8 @@ from datetime import datetime, timezone
 
 import httpx
 
-from xiaomi_health_sync import cgm_mirror
-from xiaomi_health_sync.xiaomi import XiaomiResponse
+from mi_health_link import cgm_mirror
+from mi_health_link.xiaomi import XiaomiResponse
 
 
 def _sample(timestamp_ms: int, value: float) -> dict:

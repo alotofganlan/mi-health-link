@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import pytest
 
-from xiaomi_health_sync.auto_discovery import DiscoveryError
-from xiaomi_health_sync.workout_sync import WORKOUT_HISTORY_PATH, WorkoutSyncRunner
-from xiaomi_health_sync.xiaomi import XiaomiResponse
+from mi_health_link.auto_discovery import DiscoveryError
+from mi_health_link.workout_sync import WORKOUT_HISTORY_PATH, WorkoutSyncRunner
+from mi_health_link.xiaomi import XiaomiResponse
 
 
 class FakeClient:

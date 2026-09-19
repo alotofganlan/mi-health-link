@@ -4,7 +4,7 @@ import json
 
 import httpx
 
-from xiaomi_health_sync.wake_weather import WakeWeather
+from mi_health_link.wake_weather import WakeWeather
 
 
 def test_resolve_place_returns_city_district_country_without_state_or_address() -> None:
@@ -47,7 +47,7 @@ def test_resolve_place_returns_city_district_country_without_state_or_address() 
     assert seen[0].url.params["lon"] == "67.89"
     assert seen[0].url.params["format"] == "geocodejson"
     assert seen[0].url.params["zoom"] == "10"
-    assert seen[0].headers["user-agent"] == "xiaomi-health-sync/0.6"
+    assert seen[0].headers["user-agent"] == "mi-health-link/0.6"
     assert "region" not in place.as_dict()
     assert "street" not in place.as_dict()
 

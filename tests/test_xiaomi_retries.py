@@ -3,8 +3,8 @@ from urllib.parse import parse_qs
 
 import httpx
 
-from xiaomi_health_sync.config import Settings, XiaomiCredentials
-from xiaomi_health_sync.xiaomi import XiaomiHealthClient
+from mi_health_link.config import Settings, XiaomiCredentials
+from mi_health_link.xiaomi import XiaomiHealthClient
 
 
 def settings():
@@ -59,7 +59,7 @@ def test_encrypted_post_retries_transient_connect_timeout(monkeypatch):
             raise httpx.ConnectTimeout("temporary tls timeout", request=request)
         return httpx.Response(200, text='{"code":0,"result":{"data_list":[]}}')
 
-    monkeypatch.setattr("xiaomi_health_sync.xiaomi.time.sleep", sleeps.append)
+    monkeypatch.setattr("mi_health_link.xiaomi.time.sleep", sleeps.append)
     client = XiaomiHealthClient(
         settings(),
         credentials(),
@@ -89,7 +89,7 @@ def test_encrypted_post_does_not_retry_http_response(monkeypatch):
         calls += 1
         return httpx.Response(503, text='{"code":503,"message":"busy"}')
 
-    monkeypatch.setattr("xiaomi_health_sync.xiaomi.time.sleep", lambda _: None)
+    monkeypatch.setattr("mi_health_link.xiaomi.time.sleep", lambda _: None)
     client = XiaomiHealthClient(
         settings(),
         credentials(),

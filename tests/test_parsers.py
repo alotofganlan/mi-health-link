@@ -1,6 +1,6 @@
 import json
 
-from xiaomi_health_sync.parsers import parse_sleep_entry
+from mi_health_link.parsers import parse_sleep_entry
 
 
 def test_parse_sleep_entry_xiaomi_shape():

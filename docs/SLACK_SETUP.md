@@ -82,7 +82,7 @@ chmod 600 .env
 重启晨报服务：
 
 ```bash
-systemctl --user restart xiaomi-health-mcp.service
+systemctl --user restart mi-health-link-mcp.service
 ```
 
 不要把 `.env`、Slack Token、Webhook URL 或带 Authorization 头的请求截图上传到 GitHub 或 issue。

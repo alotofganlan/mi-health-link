@@ -2,7 +2,7 @@ import base64
 import hashlib
 import json
 
-from xiaomi_health_sync.auth import (
+from mi_health_link.auth import (
     append_query,
     make_client_sign,
     parse_xiaomi_json,

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from xiaomi_health_sync.xiaomi import XiaomiHealthClient, XiaomiResponse
+from mi_health_link.xiaomi import XiaomiHealthClient, XiaomiResponse
 
 
 def test_get_diet_records_by_time_uses_read_only_diet_endpoint(monkeypatch):

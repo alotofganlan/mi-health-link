@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import xiaomi_health_sync.notifications as notifications
+import mi_health_link.notifications as notifications
 
 
 class _Response:

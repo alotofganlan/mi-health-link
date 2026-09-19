@@ -2,7 +2,7 @@ import json
 
 import httpx
 
-from xiaomi_health_sync.s4_normalize import (
+from mi_health_link.s4_normalize import (
     DIRECT_NORMALIZED_KEYS,
     S4_STRUCTURED_KEYS,
     extract_history_items,
@@ -12,7 +12,7 @@ from xiaomi_health_sync.s4_normalize import (
     sleep_source_kind,
     source_record_types_for_key,
 )
-from xiaomi_health_sync.supabase_store import SupabaseStore
+from mi_health_link.supabase_store import SupabaseStore
 
 
 def test_s4_structured_keys_include_sleep_weight_and_new_verified_metrics():

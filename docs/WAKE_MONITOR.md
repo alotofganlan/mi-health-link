@@ -91,7 +91,7 @@ curl --fail-with-body -X POST 'https://health.example.com/api/wake-probe' \
 ## 日志确认
 
 ```bash
-journalctl --user -u xiaomi-health-mcp.service --since today --no-pager \
+journalctl --user -u mi-health-link-mcp.service --since today --no-pager \
   | grep -E 'location_update|wake_probe|xiaomi_sleep_sync|sleep_report'
 ```
 

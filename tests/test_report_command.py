@@ -1,7 +1,7 @@
 from pathlib import Path
 import sys
 
-from xiaomi_health_sync.report_command import report_command_argv
+from mi_health_link.report_command import report_command_argv
 
 
 def test_default_report_command_uses_current_python_and_project_script(

@@ -5,7 +5,7 @@ import json
 
 import httpx
 
-from xiaomi_health_sync.wake_store import WakeStore
+from mi_health_link.wake_store import WakeStore
 
 
 UTC = timezone.utc

@@ -5,7 +5,7 @@ import json
 
 import httpx
 
-from xiaomi_health_sync.wake_store import WakeStore
+from mi_health_link.wake_store import WakeStore
 
 
 def test_list_sleep_rows_selects_watch_records_for_report_date() -> None:

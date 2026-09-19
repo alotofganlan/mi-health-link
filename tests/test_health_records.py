@@ -1,4 +1,4 @@
-from xiaomi_health_sync.health_records import normalize_data_item
+from mi_health_link.health_records import normalize_data_item
 
 
 def test_normalize_data_item_parses_value_json_and_preserves_raw():

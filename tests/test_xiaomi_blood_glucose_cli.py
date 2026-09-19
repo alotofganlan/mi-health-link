@@ -6,15 +6,15 @@ from pathlib import Path
 
 import httpx
 
-import xiaomi_health_sync.blood_glucose_cli as glucose_cli
-from xiaomi_health_sync.blood_glucose import (
+import mi_health_link.blood_glucose_cli as glucose_cli
+from mi_health_link.blood_glucose import (
     XiaomiGlucoseBatchWriteResult,
 )
-from xiaomi_health_sync.config import Settings
+from mi_health_link.config import Settings
 
 
 def test_xiaomi_blood_glucose_cli_module_exists():
-    assert importlib.util.find_spec("xiaomi_health_sync.blood_glucose_cli") is not None
+    assert importlib.util.find_spec("mi_health_link.blood_glucose_cli") is not None
 
 
 def test_push_command_is_dry_run_unless_send_is_explicit():

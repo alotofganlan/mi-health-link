@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from xiaomi_health_sync.mcp_bundle import HealthBundleService
+from mi_health_link.mcp_bundle import HealthBundleService
 
 
 class FakeReader:

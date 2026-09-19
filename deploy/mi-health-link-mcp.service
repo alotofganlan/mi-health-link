@@ -7,7 +7,7 @@ Wants=network-online.target
 Type=simple
 WorkingDirectory=%h/mi-health-link
 EnvironmentFile=%h/mi-health-link/.env
-ExecStart=%h/mi-health-link/.venv/bin/xiaomi-health-mcp
+ExecStart=%h/mi-health-link/.venv/bin/mi-health-link-mcp
 Restart=on-failure
 RestartSec=5
 

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from xiaomi_health_sync.recent_sync import run_recent_sync
+from mi_health_link.recent_sync import run_recent_sync
 
 
 @dataclass

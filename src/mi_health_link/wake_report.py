@@ -15,7 +15,7 @@ from .wake_store import WakeStore
 from .wake_versions import select_unreported_sleep
 
 
-LOG = logging.getLogger("xiaomi-health-sleep-report")
+LOG = logging.getLogger("mi-health-link-sleep-report")
 
 
 @dataclass(frozen=True)

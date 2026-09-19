@@ -79,7 +79,7 @@
 
 OAuth 页面设置了 no-store、CSP、no-referrer、禁止 iframe 和 MIME 嗅探等安全响应头。Supabase SDK 已锁定版本并打包进项目静态资源，登录页面不会再从第三方 CDN 加载 JavaScript。
 
-仓库中的 `web/oauth-consent.js` 是源码，`src/xiaomi_health_sync/static/oauth-consent.js` 是随 Python 包发布的浏览器文件。修改源码后应使用 Node.js 22 执行 `npm ci` 和 `npm run build:oauth`，并提交新的 bundle 与 `package-lock.json`。
+仓库中的 `web/oauth-consent.js` 是源码，`src/mi_health_link/static/oauth-consent.js` 是随 Python 包发布的浏览器文件。修改源码后应使用 Node.js 22 执行 `npm ci` 和 `npm run build:oauth`，并提交新的 bundle 与 `package-lock.json`。
 
 ## 日志与消息
 

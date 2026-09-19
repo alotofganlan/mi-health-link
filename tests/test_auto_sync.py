@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import argparse
 
-import xiaomi_health_sync.auto_sync as auto_sync
-from xiaomi_health_sync.auto_discovery import XiaomiAuthExpiredError
+import mi_health_link.auto_sync as auto_sync
+from mi_health_link.auto_discovery import XiaomiAuthExpiredError
 
 
 def test_auto_sync_defaults_to_24_hour_window():

@@ -1,6 +1,6 @@
 from datetime import date
 
-from xiaomi_health_sync.cycle_prediction import predict_xiaomi_cycle
+from mi_health_link.cycle_prediction import predict_xiaomi_cycle
 
 
 def boundary(kind: str, day: str) -> dict[str, str]:

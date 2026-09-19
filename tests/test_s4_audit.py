@@ -1,4 +1,4 @@
-from xiaomi_health_sync.s4_audit import summarize_deep_fields, summarize_metric_fields
+from mi_health_link.s4_audit import summarize_deep_fields, summarize_metric_fields
 
 
 def test_summarize_metric_fields_reports_names_without_values():

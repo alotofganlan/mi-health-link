@@ -94,8 +94,8 @@ chmod 600 .env xiaomi-credentials.json
 ### 3. 登录小米并同步数据
 
 ```bash
-.venv/bin/xiaomi-health-sync login
-.venv/bin/xiaomi-health-sync discover
+.venv/bin/mi-health-link login
+.venv/bin/mi-health-link discover
 ```
 
 `login` 会引导你完成小米登录；`discover` 会读取小米实际返回的健康项目，并开始同步历史记录。确认数据已经写入 Supabase 后，再启用每 15 分钟运行一次的 systemd timer。
@@ -204,7 +204,7 @@ npm ci
 npm run build:oauth
 ```
 
-构建后需要同时提交 `package-lock.json` 和生成的 `src/xiaomi_health_sync/static/oauth-consent.js`。
+构建后需要同时提交 `package-lock.json` 和生成的 `src/mi_health_link/static/oauth-consent.js`。
 
 公开仓库前可以使用 gitleaks 检查待发布文件：
 
@@ -217,7 +217,7 @@ gitleaks dir . --redact
 查看脱敏后的配置状态：
 
 ```bash
-.venv/bin/xiaomi-health-sync show-config
+.venv/bin/mi-health-link show-config
 ```
 
 `show-config` 不会直接输出 `.env` 中的密钥。排查问题时也不要把完整 `.env`、小米 Cookie、`passToken`、`ssecurity` 或 Supabase Secret key 粘贴到聊天和 issue 中。

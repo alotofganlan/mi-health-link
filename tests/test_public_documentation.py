@@ -6,7 +6,7 @@ ROOT = Path(__file__).parents[1]
 
 def test_public_runtime_has_no_gmail_trigger() -> None:
     assert not (ROOT / "gmail_morning_report.py").exists()
-    assert not (ROOT / "src/xiaomi_health_sync/gmail_morning_report.py").exists()
+    assert not (ROOT / "src/mi_health_link/gmail_morning_report.py").exists()
 
     public_configuration = "\n".join(
         (ROOT / name).read_text(encoding="utf-8")

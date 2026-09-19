@@ -3,9 +3,9 @@ from __future__ import annotations
 from datetime import datetime, timezone
 import json
 
-from xiaomi_health_sync.wake_context import WakeContextService
-from xiaomi_health_sync.wake_store import Presence
-from xiaomi_health_sync.wake_weather import WeatherContext
+from mi_health_link.wake_context import WakeContextService
+from mi_health_link.wake_store import Presence
+from mi_health_link.wake_weather import WeatherContext
 
 
 class FakeStore:

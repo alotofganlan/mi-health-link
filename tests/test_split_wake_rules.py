@@ -4,11 +4,11 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from xiaomi_health_sync.wake_payloads import (
+from mi_health_link.wake_payloads import (
     parse_location_update_payload,
     parse_unlock_payload,
 )
-from xiaomi_health_sync.wake_versions import select_unreported_sleep
+from mi_health_link.wake_versions import select_unreported_sleep
 
 
 CST = timezone(timedelta(hours=8))

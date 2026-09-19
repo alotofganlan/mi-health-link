@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from xiaomi_health_sync.temperature_store import TemperatureAwareStore
+from mi_health_link.temperature_store import TemperatureAwareStore
 
 
 def test_temperature_characteristic_is_written_to_health_records() -> None:

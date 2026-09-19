@@ -5,7 +5,7 @@ import json
 
 import httpx
 
-from xiaomi_health_sync.sync_store import DirectSupabaseStore
+from mi_health_link.sync_store import DirectSupabaseStore
 
 
 def _store(handler):
